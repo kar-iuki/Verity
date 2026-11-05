@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+
+# Environment files
+.env
+.env.local
+
+# Build output
+dist/
+dist-ssr/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python
+*.py[cod]
+*.egg-info/
+
+# Logs
+*.log
+
+# Large / local AI caches
+ai-service/silent_face/.git/
+**/.insightface/
+ai-service/debug/
+
+# Isolated KYC experiment environment
+.venv-kyc/
+
+# Passkey browser test artifacts
+frontend/test-results/
+frontend/playwright-report/
+
+# Academic drafts, chat exports, and agent working notes.
+# These explain how the project was produced and are not part of the app.
+documentation/
