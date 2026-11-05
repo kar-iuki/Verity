@@ -45,6 +45,16 @@ Verify: `GET http://localhost:3000/health` → `{ "status": "ok" }`
 | `AI_SERVICE_URL` | URL of the Python AI service |
 | `PORT` | Express server port (default: 3000) |
 | `JWT_SECRET` | Secret for signing JWT tokens |
+| `FRONTEND_URL` | Comma-separated frontend origins allowed by CORS |
+| `FRAUD_MAX_FAILED_ATTEMPTS_PER_IP` | Failed registration attempts allowed per IP |
+| `FRAUD_MAX_FAILED_ATTEMPTS_PER_DEVICE` | Failed registration attempts allowed per device |
+| `FRAUD_LOOKBACK_HOURS` | Hours of history counted toward those caps |
+| `WEBAUTHN_RP_ID` | Passkey relying-party ID, usually the site hostname |
+| `WEBAUTHN_RP_NAME` | Name shown by the browser during passkey prompts |
+| `WEBAUTHN_ORIGINS` | Origins allowed to use passkeys |
+| `TRUST_PROXY` | Trusted reverse-proxy setting. Default is `loopback` |
+| `VERITY_API_KEY` | Shared secret sent to the hosted AI service |
+| `SVM_TIMEOUT_MS` | Milliseconds to wait for the decision model |
 
 ## AI Service Setup
 
