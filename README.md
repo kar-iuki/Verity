@@ -116,6 +116,7 @@ pip install timm easydict
 
 ```bash
 cd frontend
+cp .env.example .env   # then fill in the Supabase URL and anon key
 npm install
 npm run dev
 ```
@@ -123,6 +124,14 @@ npm run dev
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 The Vite dev server proxies `/api` requests to the backend at `http://localhost:3000`.
+
+### Environment Variables
+
+| Variable | Description |
+|---|---|
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon key. This is the browser key, not the service-role key. |
+| `VITE_API_URL` | Optional. Set only when the API is on a different host than the frontend. |
 
 ## Running All Services
 
