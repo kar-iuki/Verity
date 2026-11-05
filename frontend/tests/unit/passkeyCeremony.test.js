@@ -1,0 +1,58 @@
+import { beforeEach, it, expect, vi } from 'vitest'
+const mocks = vi.hoisted(() => ({ post:vi.fn(), authentication:vi.fn(), registration:vi.fn(), cancel:vi.fn() }))
+vi.mock('../../src/services/api.js', () => ({ default:{ post:mocks.post } }))
+vi.mock('@simplewebauthn/browser', () => ({ startAuthentication:mocks.authentication, startRegistration:mocks.registration, WebAuthnAbortService:{ cancelCeremony:mocks.cancel } }))
+import { registerPasskey, loginWithPasskey, primePasskeyLogin, clearPreparedPasskey, cancelPasskeyCeremony, passkeyErrorMessage } from '../../src/services/passkeyService.js'
+import { registered, markRegistered } from '../../src/utils/passkeyStorage.js'
+beforeEach(() => { vi.resetAllMocks(); localStorage.clear(); clearPreparedPasskey(); cancelPasskeyCeremony() })
+const options = { data:{ options:{ challenge:'random' }, challengeId:'id' } }
+const expired = { response:{ data:{ code:'CHALLENGE_EXPIRED' } } }
+it('distinguishes deployment errors from connection failures without displaying server internals', () => {
+  expect(passkeyErrorMessage({ response:{ status:503, data:{ code:'PASSKEY_NOT_CONFIGURED' } } }, 'Network error')).toContain('not been configured')
+  expect(passkeyErrorMessage({ response:{ status:403, data:{ code:'PASSKEY_ORIGIN_NOT_ALLOWED' } } }, 'Network error')).toContain('hosted passkey settings')
+  expect(passkeyErrorMessage({ response:{ status:503 } }, 'Network error')).toContain('temporarily unavailable')
+  expect(passkeyErrorMessage({ response:{ status:429 } }, 'Network error')).toContain('wait a few minutes')
+  expect(passkeyErrorMessage({ response:{ status:500, data:{ error:'internal secret' } } }, 'Try again')).toBe('Try again')
+  expect(passkeyErrorMessage(new Error('Offline'), 'Network error')).toBe('Network error')
+})
+it('automatically restarts an expired login exactly once', async () => {
+  mocks.post.mockResolvedValueOnce(options).mockRejectedValueOnce(expired).mockResolvedValueOnce(options).mockResolvedValueOnce({ data:{ user:{ user_id:'one' }, credentialId:'key' } })
+  mocks.authentication.mockResolvedValue({ id:'key' })
+  await loginWithPasskey(); expect(mocks.authentication).toHaveBeenCalledTimes(2); expect(registered('one').credentialId).toBe('key')
+})
+it('stops after two expired challenges and leaves local state unchanged', async () => {
+  mocks.post.mockResolvedValueOnce(options).mockRejectedValueOnce(expired).mockResolvedValueOnce(options).mockRejectedValueOnce(expired)
+  mocks.registration.mockResolvedValue({ id:'key' })
+  await expect(registerPasskey('one')).rejects.toBe(expired); expect(mocks.registration).toHaveBeenCalledTimes(2); expect(registered('one')).toBeNull()
+})
+it('does not change registration flags on network failure or cancellation', async () => {
+  for (const error of [new Error('network'),new DOMException('Cancelled','NotAllowedError')]) {
+    mocks.post.mockResolvedValueOnce(options); mocks.registration.mockRejectedValueOnce(error)
+    await expect(registerPasskey('one')).rejects.toBe(error); expect(registered('one')).toBeNull()
+  }
+})
+it('duplicate confirms availability without guessing a credential ID', async () => {
+  mocks.post.mockResolvedValueOnce(options); mocks.registration.mockRejectedValueOnce(new DOMException('Exists','InvalidStateError'))
+  expect((await registerPasskey('one')).duplicate).toBe(true); expect(registered('one').credentialId).toBeNull(); expect(mocks.post).toHaveBeenCalledTimes(1)
+})
+it('cancellation while fetching options cannot start a late navigator request', async () => {
+  let resolve
+  mocks.post.mockImplementationOnce(() => new Promise(r => { resolve = r }))
+  const ceremony = loginWithPasskey(true); cancelPasskeyCeremony(); resolve(options)
+  await expect(ceremony).rejects.toMatchObject({ name:'AbortError' }); expect(mocks.authentication).not.toHaveBeenCalled()
+})
+it('starts a prepared passkey prompt before asking the server again', async () => {
+  const hints = { email: 'agent@example.test', credentialIds: ['key'] }
+  mocks.post.mockResolvedValueOnce(options).mockResolvedValueOnce({ data: { user: { user_id: 'one' }, credentialId: 'key' } })
+  mocks.authentication.mockResolvedValue({ id: 'key' })
+  await primePasskeyLogin(hints)
+  await loginWithPasskey(false, hints)
+  expect(mocks.authentication).toHaveBeenCalledWith({ optionsJSON: options.data.options, useBrowserAutofill: false })
+  expect(mocks.post.mock.calls.map(call => call[0])).toEqual(['/api/auth/passkey/login/options', '/api/auth/passkey/login/verify'])
+})
+it('failed known credential clears only its stale hint', async () => {
+  markRegistered('one','key'); markRegistered('two','other')
+  mocks.post.mockResolvedValueOnce(options).mockRejectedValueOnce({ response:{ data:{ code:'PASSKEY_FAILED' } } })
+  mocks.authentication.mockResolvedValue({ id:'key' })
+  await expect(loginWithPasskey()).rejects.toBeDefined(); expect(registered('one')).toBeNull(); expect(registered('two').credentialId).toBe('other')
+})
