@@ -1,0 +1,32 @@
+{
+  "version": "3.1.0",
+  "seed": 42,
+  "dataset_sha256": "b51a8e91619c1db5b9192a58db8c274b8e474deec631a76246831e22d3b5442a",
+  "full_selection": {
+    "best_params": {
+      "C": 10,
+      "gamma": 1
+    },
+    "cv_macro_f1": 0.7109576305607326,
+    "cv_folds": 5,
+    "cv_scoring": "f1_macro",
+    "candidate_count": 24
+  },
+  "identity_selection": {
+    "best_params": {
+      "C": 100,
+      "gamma": 1
+    },
+    "cv_macro_f1": 0.7063625215881768,
+    "cv_folds": 5,
+    "cv_scoring": "f1_macro",
+    "candidate_count": 24
+  },
+  "tree_selection": {
+    "max_depth": 5,
+    "min_samples_leaf": 20
+  },
+  "calibration": "Sigmoid on validation only, frozen train-only estimators",
+  "test_policy": "All generation, hyperparameters, calibration and 6-feature deployment fixed before final test evaluation",
+  "frozen_at": "2026-11-04T18:42:24.795835+00:00"
+}
