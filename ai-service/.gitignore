@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.env
+venv/
+.venv/
+# Scratch weights dropped in ai-service/models/. The runtime SVM lives in ml/models.
+/models/*.pkl
+/models/*.joblib
