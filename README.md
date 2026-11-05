@@ -49,9 +49,9 @@ Verify: `GET http://localhost:3000/health` → `{ "status": "ok" }`
 | `FRAUD_MAX_FAILED_ATTEMPTS_PER_IP` | Registration-time fraud guardrail: maximum failed attempts per IP |
 | `FRAUD_MAX_FAILED_ATTEMPTS_PER_DEVICE` | Registration-time fraud guardrail: maximum failed attempts per device |
 | `FRAUD_LOOKBACK_HOURS` | Registration-time fraud guardrail: lookback window in hours |
-| `WEBAUTHN_RP_ID` | Passkey relying party ID. HTTPS in deployment; localhost is allowed for development |
-| `WEBAUTHN_RP_NAME` | Passkey relying party name. HTTPS in deployment; localhost is allowed for development |
-| `WEBAUTHN_ORIGINS` | Passkey origins. HTTPS in deployment; localhost is allowed for development |
+| `WEBAUTHN_RP_ID` | Passkey relying party ID. Use localhost in development and the site hostname when deployed |
+| `WEBAUTHN_RP_NAME` | Name shown by the browser during a passkey prompt |
+| `WEBAUTHN_ORIGINS` | Allowed origins for passkey registration and sign-in |
 | `TRUST_PROXY` | Comma-separated trusted proxy IPs/CIDRs if the proxy is not on loopback |
 | `VERITY_API_KEY` | Shared random secret of at least 32 characters for the hosted AI service |
 | `SVM_TIMEOUT_MS` | Allow for model startup after scaling to zero |
